@@ -1,0 +1,5 @@
+{
+  "name": "Trader Dashboard Pro",
+  "description": "Dashboard de gerenciamento de trades com níveis de risco progressivos e controle de capital.",
+  "requestFramePermissions": []
+}

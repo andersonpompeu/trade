@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Entity Validations
+    function isValidUserConfig(data) {
+      return data.userId is string 
+        && data.userId.size() <= 128 
+        && data.capital is number 
+        && data.profitTarget is number 
+        && (data.riskRewardRatio == null || data.riskRewardRatio is number)
+        && (data.feesPercentage == null || data.feesPercentage is number)
+        && (data.cycleLength == null || data.cycleLength is int)
+        && (data.levels == null || data.levels is map)
+        && (data.spreadsheetId == null || data.spreadsheetId is string)
+        && (data.spreadsheetTitle == null || data.spreadsheetTitle is string)
+        && (data.spreadsheetUrl == null || data.spreadsheetUrl is string)
+        && (data.autoSync == null || data.autoSync is bool);
+    }
+
+    function isValidTrade(data) {
+      return data.id is string 
+        && data.id.size() <= 128 
+        && data.userId is string 
+        && data.userId.size() <= 128 
+        && data.date is string 
+        && data.date.size() <= 64
+        && data.result is number 
+        && data.level is int 
+        && data.type is string 
+        && (data.type == "win" || data.type == "loss");
+    }
+
+    // Default catch-all deny rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User Configuration Document
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) 
+        && isValidId(userId) 
+        && isValidUserConfig(incoming()) 
+        && incoming().userId == userId;
+      allow update: if isOwner(userId) 
+        && isValidUserConfig(incoming()) 
+        && incoming().userId == existing().userId;
+      allow delete: if isOwner(userId);
+    }
+
+    // User Trades Subcollection
+    match /users/{userId}/trades/{tradeId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) 
+        && isValidId(userId)
+        && isValidId(tradeId)
+        && isValidTrade(incoming()) 
+        && incoming().userId == userId 
+        && incoming().id == tradeId;
+      allow update: if isOwner(userId) 
+        && isValidTrade(incoming()) 
+        && incoming().userId == existing().userId 
+        && incoming().id == existing().id;
+      allow delete: if isOwner(userId);
+    }
+  }
+}

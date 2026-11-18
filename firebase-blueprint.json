@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "UserConfig": {
+      "title": "UserConfig",
+      "description": "Trader configuration and metrics",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "capital": {
+          "type": "number"
+        },
+        "profitTarget": {
+          "type": "number"
+        },
+        "riskRewardRatio": {
+          "type": "number"
+        },
+        "feesPercentage": {
+          "type": "number"
+        },
+        "cycleLength": {
+          "type": "number"
+        },
+        "levels": {
+          "type": "object"
+        },
+        "spreadsheetId": {
+          "type": "string"
+        },
+        "spreadsheetTitle": {
+          "type": "string"
+        },
+        "spreadsheetUrl": {
+          "type": "string"
+        },
+        "autoSync": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "capital",
+        "profitTarget"
+      ]
+    },
+    "Trade": {
+      "title": "Trade",
+      "description": "An individual trade record",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "result": {
+          "type": "number"
+        },
+        "level": {
+          "type": "integer"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "win",
+            "loss"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "date",
+        "result",
+        "level",
+        "type"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserConfig",
+      "description": "User dashboard configuration document"
+    },
+    "/users/{userId}/trades/{tradeId}": {
+      "schema": "Trade",
+      "description": "User trades subcollection"
+    }
+  }
+}
